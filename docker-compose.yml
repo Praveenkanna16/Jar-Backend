@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: gold-investment-db
+    environment:
+      POSTGRES_DB: gold_investment_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gold-investment-network
+
+  app:
+    build: .
+    container_name: gold-investment-app
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gold_investment_platform
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      PHONEPE_MERCHANT_ID: ${PHONEPE_MERCHANT_ID}
+      PHONEPE_API_KEY: ${PHONEPE_API_KEY}
+      PHONEPE_CLIENT_VERSION: ${PHONEPE_CLIENT_VERSION}
+      PHONEPE_ENV: ${PHONEPE_ENV}
+      BASE_URL: ${BASE_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    networks:
+      - gold-investment-network
+    restart: unless-stopped
+
+networks:
+  gold-investment-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
