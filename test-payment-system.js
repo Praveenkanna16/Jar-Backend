@@ -1,16 +1,23 @@
 #!/usr/bin/env node
+
 const axios = require('axios');
 const readline = require('readline');
+const { exec } = require('child_process');
 
+// Base URL for backend
+const BASE_URL = 'http://localhost:5000';
+
+// CLI interface
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
-const BASE_URL = 'http://localhost:5000';
+// Auth token and user ID storage
 let authToken = null;
 let userId = null;
 
+// Console colors
 const colors = {
   reset: '\x1b[0m',
   green: '\x1b[32m',
@@ -24,6 +31,12 @@ function log(message, color = 'reset') {
   console.log(colors[color] + message + colors.reset);
 }
 
+// Helper to prompt for input
+function askQuestion(question) {
+  return new Promise(resolve => rl.question(question, resolve));
+}
+
+// Register user function
 async function registerUser() {
   try {
     log('\n📝 Registering new test user...', 'cyan');
@@ -36,27 +49,24 @@ async function registerUser() {
     };
 
     const response = await axios.post(`${BASE_URL}/api/auth/register`, userData);
-    
     if (response.data.success) {
       log('✅ User registered successfully!', 'green');
       log(`Email: ${userData.email}`, 'yellow');
       log(`Password: ${userData.password}`, 'yellow');
       return userData;
     }
+    return null;
   } catch (error) {
     log(`❌ Registration failed: ${error.response?.data?.message || error.message}`, 'red');
     return null;
   }
 }
 
+// Login user function
 async function loginUser(email, password) {
   try {
     log('\n🔐 Logging in...', 'cyan');
-    const response = await axios.post(`${BASE_URL}/api/auth/login`, {
-      email,
-      password
-    });
-
+    const response = await axios.post(`${BASE_URL}/api/auth/login`, { email, password });
     if (response.data.success) {
       authToken = response.data.token;
       userId = response.data.user.id;
@@ -64,16 +74,17 @@ async function loginUser(email, password) {
       log(`Token: ${authToken.substring(0, 20)}...`, 'yellow');
       return true;
     }
+    return false;
   } catch (error) {
     log(`❌ Login failed: ${error.response?.data?.message || error.message}`, 'red');
     return false;
   }
 }
 
+// Initiate payment function
 async function initiatePayment(amount) {
   try {
     log(`\n💳 Initiating payment for ₹${amount}...`, 'cyan');
-    
     const response = await axios.post(
       `${BASE_URL}/api/payments/initiate`,
       {
@@ -87,7 +98,6 @@ async function initiatePayment(amount) {
         }
       }
     );
-
     if (response.data.success) {
       log('✅ Payment initiated successfully!', 'green');
       log(`Transaction ID: ${response.data.data.transactionId}`, 'yellow');
@@ -95,16 +105,17 @@ async function initiatePayment(amount) {
       log('\n📱 Open the above URL in your browser to complete the payment', 'cyan');
       return response.data.data;
     }
+    return null;
   } catch (error) {
     log(`❌ Payment initiation failed: ${error.response?.data?.message || error.message}`, 'red');
     return null;
   }
 }
 
+// Check payment status function
 async function checkPaymentStatus(transactionId) {
   try {
     log(`\n🔍 Checking payment status for ${transactionId}...`, 'cyan');
-    
     const response = await axios.get(
       `${BASE_URL}/api/payments/status/${transactionId}`,
       {
@@ -113,26 +124,24 @@ async function checkPaymentStatus(transactionId) {
         }
       }
     );
-
     if (response.data.success) {
       const status = response.data.data.status;
-      const statusColor = status === 'completed' ? 'green' : 
-                         status === 'pending' ? 'yellow' : 'red';
-      
+      const statusColor = status === 'completed' ? 'green' : (status === 'pending' ? 'yellow' : 'red');
       log(`Payment Status: ${status.toUpperCase()}`, statusColor);
       log(`Amount: ₹${response.data.data.amount}`, 'yellow');
       return response.data.data;
     }
+    return null;
   } catch (error) {
     log(`❌ Status check failed: ${error.response?.data?.message || error.message}`, 'red');
     return null;
   }
 }
 
+// Get transaction history
 async function getTransactions() {
   try {
     log('\n📋 Fetching your transactions...', 'cyan');
-    
     const response = await axios.get(
       `${BASE_URL}/api/payments/transactions`,
       {
@@ -141,15 +150,14 @@ async function getTransactions() {
         }
       }
     );
-
     if (response.data.success) {
       const transactions = response.data.data.transactions;
-      if (transactions.length === 0) {
+      if (!transactions.length) {
         log('No transactions found', 'yellow');
       } else {
         log(`\nFound ${transactions.length} transaction(s):`, 'green');
-        transactions.forEach((tx, index) => {
-          log(`\n${index + 1}. Transaction ID: ${tx.transactionId}`, 'blue');
+        transactions.forEach((tx, i) => {
+          log(`\n${i + 1}. Transaction ID: ${tx.transactionId}`, 'blue');
           log(`   Amount: ₹${tx.amount}`, 'yellow');
           log(`   Status: ${tx.status}`, tx.status === 'completed' ? 'green' : 'yellow');
           log(`   Date: ${new Date(tx.createdAt || tx.createdat).toLocaleString()}`, 'cyan');
@@ -157,12 +165,14 @@ async function getTransactions() {
       }
       return transactions;
     }
+    return [];
   } catch (error) {
     log(`❌ Failed to fetch transactions: ${error.response?.data?.message || error.message}`, 'red');
     return [];
   }
 }
 
+// Test server connection
 async function testServerConnection() {
   try {
     log('🔌 Testing server connection...', 'cyan');
@@ -172,6 +182,8 @@ async function testServerConnection() {
       log(`Environment: ${response.data.environment}`, 'yellow');
       return true;
     }
+    log('Unknown server response', 'yellow');
+    return false;
   } catch (error) {
     log(`❌ Server is not responding at ${BASE_URL}`, 'red');
     log('Please start the server with: npm start', 'yellow');
@@ -179,14 +191,34 @@ async function testServerConnection() {
   }
 }
 
-function askQuestion(question) {
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      resolve(answer);
-    });
-  });
+// Full automated test
+async function runFullTest() {
+  log('\n🚀 Starting Full Payment System Test...', 'blue');
+  log('=====================================', 'blue');
+  const user = await registerUser();
+  if (!user) {
+    log('Test failed at registration', 'red');
+    return;
+  }
+  const loginSuccess = await loginUser(user.email, user.password);
+  if (!loginSuccess) {
+    log('Test failed at login', 'red');
+    return;
+  }
+  const paymentData = await initiatePayment(100);
+  if (!paymentData) {
+    log('Test failed at payment initiation', 'red');
+    return;
+  }
+  await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+  await checkPaymentStatus(paymentData.transactionId);
+  await getTransactions();
+  log('\n=====================================', 'blue');
+  log('✅ Full test completed successfully!', 'green');
+  log('=====================================', 'blue');
 }
 
+// Interactive menu
 async function interactiveMenu() {
   while (true) {
     log('\n========== PAYMENT SYSTEM TEST MENU ==========', 'blue');
@@ -200,7 +232,7 @@ async function interactiveMenu() {
 
     const choice = await askQuestion('\nSelect option (1-6): ');
 
-    switch(choice) {
+    switch (choice) {
       case '1':
         const user = await registerUser();
         if (user) {
@@ -218,7 +250,7 @@ async function interactiveMenu() {
         if (paymentData) {
           const openBrowser = await askQuestion('Open payment URL in browser? (y/n): ');
           if (openBrowser.toLowerCase() === 'y') {
-            require('child_process').exec(`open "${paymentData.paymentUrl}"`);
+            exec(`open "${paymentData.paymentUrl}"`);
           }
         }
         break;
@@ -255,63 +287,24 @@ async function interactiveMenu() {
   }
 }
 
-async function runFullTest() {
-  log('\n🚀 Starting Full Payment System Test...', 'blue');
-  log('=====================================', 'blue');
-
-  // Test 1: Register & Login
-  const user = await registerUser();
-  if (!user) {
-    log('Test failed at registration', 'red');
-    return;
-  }
-
-  const loginSuccess = await loginUser(user.email, user.password);
-  if (!loginSuccess) {
-    log('Test failed at login', 'red');
-    return;
-  }
-
-  // Test 2: Initiate Payment
-  const paymentData = await initiatePayment(100);
-  if (!paymentData) {
-    log('Test failed at payment initiation', 'red');
-    return;
-  }
-
-  // Test 3: Check Status
-  await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-  await checkPaymentStatus(paymentData.transactionId);
-
-  // Test 4: Get Transactions
-  await getTransactions();
-
-  log('\n=====================================', 'blue');
-  log('✅ Full test completed successfully!', 'green');
-  log('=====================================', 'blue');
-}
-
+// Main function
 async function main() {
   log('\n🏦 Gold Investment Platform - Payment System Tester', 'blue');
   log('==================================================', 'blue');
-
-  // Check server connection
   const serverRunning = await testServerConnection();
   if (!serverRunning) {
     rl.close();
     process.exit(1);
   }
-
-  // Start interactive menu
   await interactiveMenu();
 }
 
-// Handle errors
-process.on('unhandledRejection', (error) => {
+// Global error handler
+process.on('unhandledRejection', error => {
   log(`\n❌ Unexpected error: ${error.message}`, 'red');
   rl.close();
   process.exit(1);
 });
 
-// Start the test
+// Start the main function
 main();
