@@ -35,7 +35,7 @@ const GoldPrice = sequelize.define('GoldPrice', {
     allowNull: false,
     defaultValue: 'API',
   },
-  isActive: {
+  is_active: { // Use snake_case to match your table and queries
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
@@ -44,7 +44,7 @@ const GoldPrice = sequelize.define('GoldPrice', {
   timestamps: true,
   createdAt: 'createdat',
   updatedAt: 'updatedat',
+  underscored: true, // Ensures all fields use snake_case in DB
 });
 
 module.exports = GoldPrice;
-

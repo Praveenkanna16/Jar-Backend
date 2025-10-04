@@ -38,6 +38,12 @@ app.get('/', (req, res) => {
   });
 });
 
+// Import all models before syncing
+require('./models/GoldPrice');
+// Add other models here if you have them, e.g.:
+// require('./models/User');
+// require('./models/Investment');
+
 // Initialize database and start server
 async function startServer() {
   try {
