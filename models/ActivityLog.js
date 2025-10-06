@@ -10,6 +10,7 @@ const ActivityLog = sequelize.define('ActivityLog', {
   userId: {
     type: DataTypes.UUID,
     allowNull: true,
+    field: 'userid',
     references: {
       model: 'users',
       key: 'id',
@@ -52,13 +53,13 @@ const ActivityLog = sequelize.define('ActivityLog', {
   timestamps: true,
   indexes: [
     {
-      fields: ['userId'],
+      fields: ['userid'],
     },
     {
       fields: ['action'],
     },
     {
-      fields: ['createdAt'],
+      fields: ['createdat'],
     },
   ],
 });

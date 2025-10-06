@@ -40,7 +40,7 @@ const Transaction = sequelize.define('Transaction', {
   },
   transactionId: {
     type: DataTypes.STRING(100),
-    allowNull: true,
+    allowNull: false,
     unique: true,
     comment: 'Unique transaction identifier'
   },

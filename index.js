@@ -40,9 +40,16 @@ app.get('/', (req, res) => {
 
 // Import all models before syncing
 require('./models/GoldPrice');
+require('./models/User');
+require('./models/Transaction');
+require('./models/Investment');
+require('./models/KYC');
+require('./models/SIPPlan');
+require('./models/ActivityLog');
+require('./models/Referral');
+require('./models/Notification');
+
 // Add other models here if you have them, e.g.:
-// require('./models/User');
-// require('./models/Investment');
 
 // Initialize database and start server
 async function startServer() {
@@ -52,7 +59,7 @@ async function startServer() {
     console.log('✅ Database connection has been established successfully.');
     
     // Sync all models
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ force: true });
     console.log('✅ Database synchronized');
     
     // Import routes after database is connected

@@ -9,29 +9,29 @@ const Referral = require('./Referral');
 const Notification = require('./Notification');
 
 // Define associations
-User.hasMany(Transaction, { foreignKey: 'userId' });
-Transaction.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Transaction, { foreignKey: 'userid' });
+Transaction.belongsTo(User, { foreignKey: 'userid' });
 
-User.hasMany(Investment, { foreignKey: 'userId' });
-Investment.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Investment, { foreignKey: 'userid' });
+Investment.belongsTo(User, { foreignKey: 'userid' });
 
 Investment.hasMany(Transaction, { foreignKey: 'investmentId' });
 Transaction.belongsTo(Investment, { foreignKey: 'investmentId' });
 
-User.hasMany(KYC, { foreignKey: 'userId' });
-KYC.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(KYC, { foreignKey: 'userid' });
+KYC.belongsTo(User, { foreignKey: 'userid' });
 
-User.hasMany(SIPPlan, { foreignKey: 'userId' });
-SIPPlan.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(SIPPlan, { foreignKey: 'userid' });
+SIPPlan.belongsTo(User, { foreignKey: 'userid' });
 
-User.hasMany(ActivityLog, { foreignKey: 'userId' });
-ActivityLog.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(ActivityLog, { foreignKey: 'userid' });
+ActivityLog.belongsTo(User, { foreignKey: 'userid' });
 
 User.hasMany(Referral, { foreignKey: 'referrerId' });
 Referral.belongsTo(User, { foreignKey: 'referrerId' });
 
-User.hasMany(Notification, { foreignKey: 'userId' });
-Notification.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Notification, { foreignKey: 'userid' });
+Notification.belongsTo(User, { foreignKey: 'userid' });
 
 module.exports = {
   User,
